@@ -77,6 +77,8 @@ window.addEventListener("load", () => {
   }
 });
 
+let youtubeApiReady = false;
+
 function addButtonToYouTubePlayer() {
   console.log('尝试添加按钮');
   const controlBar = document.querySelector('.ytp-right-controls');
@@ -88,7 +90,7 @@ function addButtonToYouTubePlayer() {
   console.log('找到控制栏，创建按钮');
   const button = document.createElement('button');
   button.className = 'ytp-button loop-button';
-  button.title = '循环播放';
+  button.title = '全屏播放';
   
   const img = document.createElement('img');
   img.src = chrome.runtime.getURL('icons/inactive16.png');
@@ -109,13 +111,66 @@ function addButtonToYouTubePlayer() {
     padding: 8px;
   `;
 
-  button.addEventListener('click', () => {
-    console.log('按钮被点击了!');
-    // 在这里添加您想要的点击事件处理逻辑
-  });
+  button.addEventListener('click', createOverlayPlayer);
 
   controlBar.appendChild(button);
   console.log('按钮已添加到控制栏');
+}
+
+function createOverlayPlayer() {
+  console.log('按钮被点击了!');
+  
+  // 获取当前视频ID
+  const videoId = getYouTubeVideoId();
+  if (!videoId) {
+    console.log('无法获取视频ID');
+    return;
+  }
+
+  // 获取当前视频的时间
+  const currentTime = Math.floor(document.querySelector('video').currentTime);
+
+  // 创建遮罩层
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  `;
+
+  // 创建嵌入式播放器
+  const iframe = document.createElement('iframe');
+  iframe.width = '80%';
+  iframe.height = '80%';
+  iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&start=${currentTime}`;
+  iframe.frameBorder = '0';
+  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+  iframe.allowFullscreen = true;
+
+  overlay.appendChild(iframe);
+  document.body.appendChild(overlay);
+
+  // 添加点击事件以关闭遮罩层
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+
+  console.log('遮罩层和YouTube播放器已添加');
+}
+
+// 辅助函数：获取YouTube视频ID
+function getYouTubeVideoId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('v');
 }
 
 // 监听页面变化,确保在视频加载后添加按钮
