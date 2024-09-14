@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "YT Section Looper",
+  "name": "Dictation With Youtube",
   "version": "1.0",
-  "description": "Loop sections (loop start & end time as required) of YouTube videos",
+  "description": "Practice dictation with Youtube",
   "permissions": ["activeTab", "storage"],
   "icons": {
     "16": "icons/inactive16.png",

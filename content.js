@@ -120,15 +120,11 @@ function addButtonToYouTubePlayer() {
 function createOverlayPlayer() {
   console.log('按钮被点击了!');
   
-  // 获取当前视频ID
-  const videoId = getYouTubeVideoId();
-  if (!videoId) {
-    console.log('无法获取视频ID');
+  const videoElement = document.querySelector('video');
+  if (!videoElement) {
+    console.log('无法找到视频元素');
     return;
   }
-
-  // 获取当前视频的时间
-  const currentTime = Math.floor(document.querySelector('video').currentTime);
 
   // 创建遮罩层
   const overlay = document.createElement('div');
@@ -138,33 +134,60 @@ function createOverlayPlayer() {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: rgb(0, 0, 0);
     z-index: 9999;
     display: flex;
     justify-content: center;
     align-items: center;
   `;
 
-  // 创建嵌入式播放器
-  const iframe = document.createElement('iframe');
-  iframe.width = '80%';
-  iframe.height = '80%';
-  iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&start=${currentTime}`;
-  iframe.frameBorder = '0';
-  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-  iframe.allowFullscreen = true;
+  // 保存视频元素的原始样式和父元素
+  const originalStyle = videoElement.style.cssText;
+  const originalParent = videoElement.parentElement;
+  const originalNextSibling = videoElement.nextSibling;
 
-  overlay.appendChild(iframe);
+  // 计算视频的新尺寸
+  const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+  const newWidth = Math.floor(window.innerWidth * 0.5);
+  const newHeight = Math.floor(newWidth / aspectRatio);
+
+  // 修改视频元素样式
+  videoElement.style.cssText = `
+    width: ${newWidth}px;
+    height: ${newHeight}px;
+    object-fit: contain;
+    z-index: 10000;
+   position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  `;
+  
+  // 移除所有控制按钮
+  videoElement.controls = false;
+
+  // 将视频元素移动到遮罩层
+  overlay.appendChild(videoElement);
   document.body.appendChild(overlay);
 
   // 添加点击事件以关闭遮罩层
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
+      // 恢复视频元素到原始位置和样式
+      if (originalNextSibling) {
+        originalParent.insertBefore(videoElement, originalNextSibling);
+      } else {
+        originalParent.appendChild(videoElement);
+      }
+      videoElement.style.cssText = originalStyle;
+      videoElement.controls = true;
+      
+      // 移除遮罩层
       document.body.removeChild(overlay);
     }
   });
 
-  console.log('遮罩层和YouTube播放器已添加');
+  console.log('遮罩层和视频已添加');
 }
 
 // 辅助函数：获取YouTube视频ID
