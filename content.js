@@ -76,3 +76,58 @@ window.addEventListener("load", () => {
     );
   }
 });
+
+function addButtonToYouTubePlayer() {
+  console.log('尝试添加按钮');
+  const controlBar = document.querySelector('.ytp-right-controls');
+  if (!controlBar) {
+    console.log('未找到控制栏');
+    return;
+  }
+
+  console.log('找到控制栏，创建按钮');
+  const button = document.createElement('button');
+  button.className = 'ytp-button loop-button';
+  button.title = '循环播放';
+  
+  const img = document.createElement('img');
+  img.src = chrome.runtime.getURL('icons/inactive16.png');
+  img.style.cssText = `
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  `;
+  
+  button.appendChild(img);
+  button.style.cssText = `
+    width: 48px;
+    height: 48px;
+    opacity: 0.9;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 8px;
+  `;
+
+  button.addEventListener('click', () => {
+    console.log('按钮被点击了!');
+    // 在这里添加您想要的点击事件处理逻辑
+  });
+
+  controlBar.appendChild(button);
+  console.log('按钮已添加到控制栏');
+}
+
+// 监听页面变化,确保在视频加载后添加按钮
+const observerForButton = new MutationObserver(() => {
+  console.log('DOM变化检测到');
+  if (document.querySelector('.ytp-right-controls')) {
+    console.log('找到视频控制栏，准备添加按钮');
+    addButtonToYouTubePlayer();
+    observerForButton.disconnect();
+    console.log('观察器已断开连接');
+  }
+});
+
+console.log('开始观察DOM变化');
+observerForButton.observe(document.body, { childList: true, subtree: true });
